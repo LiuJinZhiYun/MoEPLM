@@ -13,7 +13,7 @@ PSMOE/
 │   ├── model.py     # Model architecture definition
 │   ├── dataset.py   # Data loading and preprocessing
 │   ├── metrics.py   # Evaluation metric functions
-│   ├── Sol_ESMC.py  # Generates ESMC embedding vectors  For details, see [https://www.evolutionaryscale.ai/blog/esm-cambrian]
+│   ├── Sol_ESMC.py  # Generates ESMC embedding vectors  
 │   ├── train.py     # Training script
 │   ├── test.py      # Inference/evaluation script
 │   └── utils.py     # Utility functions
@@ -29,7 +29,7 @@ PSMOE/
     ├── model.py     # Model architecture definition
     ├── dataset.py   # Data loading and preprocessing
     ├── metrics.py   # Evaluation metric functions
-    ├── Mut_ESMC.py  # Generates ESMC embedding vectors  For details, see [https://www.evolutionaryscale.ai/blog/esm-cambrian]
+    ├── Mut_ESMC.py  # Generates ESMC embedding vectors  
     ├── train.py     # Training script
     ├── test.py      # Inference/evaluation script
     └── utils.py     # Utility functions
@@ -99,7 +99,7 @@ These are parameters for predicting the solubility of protein,You can also find 
 ### 1. Run ESMC Phase  
 run Sol_ESMC.py or Mut_ESMC.py
 Extract biological insights from the `esmc600m` model using sequence data to generate biological feature embeddings.    
-
+For details, see [https://www.evolutionaryscale.ai/blog/esm-cambrian]
 
 ### 2. Model Training Phase  
 Train your model using sequence data and generated `.emb` files.You might also need a dataset for validation
