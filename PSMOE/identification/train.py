@@ -80,7 +80,7 @@ if __name__ == "__main__":
     alpha = torch.tensor([0.6062, 0.3938])
     criterion = FocalLoss(alpha=alpha).to(device)
     early_stop_counter = 0
-    patience = 15
+    patience = 5
     best_acc = 0
     EPOCH = 30
     timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
@@ -108,6 +108,7 @@ if __name__ == "__main__":
             print(colored(f"Early stopping triggered at epoch {epoch + 1}", "red"))
             print(f"Best val_acc: {best_acc:.4f}")
             break
+
 
 
 
