@@ -26,11 +26,9 @@ class MoEGate(nn.Module):
         self.num_experts = config.n_routed_experts
         self.scoring_func = config.scoring_func
         self.alpha = config.aux_loss_alpha
-        self.seq_aux = False  # 强制关闭seq_aux功能（适配二维输入）
+        self.seq_aux = False 
         self.register_buffer('expert_counts', torch.zeros(config.n_routed_experts))
         self.register_buffer('total_steps', torch.tensor(0))
-        self.diagnostic_interval = 5000  #
-
         self.norm_topk_prob = config.norm_topk_prob
         self.gating_dim = config.input_size
         self.weight = nn.Parameter(torch.empty((self.n_routed_experts, self.gating_dim)))
@@ -42,29 +40,18 @@ class MoEGate(nn.Module):
 
     def forward(self, hidden_states):
         bsz, h = hidden_states.shape
-
         hidden_states = hidden_states.view(-1, h)
         logits = F.linear(hidden_states, self.weight, None)
-
         scores = logits.softmax(dim=-1)
-
-
         topk_weight, topk_idx = torch.topk(scores, k=self.top_k, dim=-1, sorted=False)
-
-
         if self.top_k > 1 and self.norm_topk_prob:
             denominator = topk_weight.sum(dim=-1, keepdim=True) + 1e-20
             topk_weight = topk_weight / denominator
-
         aux_loss = None
         if self.training and self.alpha > 0.0:
-
-
             Pi = scores.mean(dim=0)
             expert_counts = F.one_hot(topk_idx, num_classes=self.num_experts).sum(dim=[0, 1]).float()
-
             fi = expert_counts * self.num_experts / (bsz * self.top_k)
-
             load_balance_loss = torch.sum(Pi * fi)
             aux_loss = self.alpha * load_balance_loss
             if aux_loss.numel() > 1:
@@ -72,13 +59,7 @@ class MoEGate(nn.Module):
             expert_counts = torch.bincount(topk_idx.view(-1), minlength=config.n_routed_experts)
             self.expert_counts += expert_counts
             self.total_steps += 1
-
-            # 定期输出诊断信息
-            if self.total_steps % self.diagnostic_interval == 0:
-                self._log_expert_distribution()
         return topk_idx, topk_weight, aux_loss
-
-
 
 
 class MLPExpert(nn.Module):
@@ -178,22 +159,16 @@ class DeepseekMoE(nn.Module):
         return final_output, aux_loss
 
 class AddAuxiliaryLoss(torch.autograd.Function):
-    """
-    修正后的辅助损失函数，确保领域专家参数通过 aux_loss 更新。
-    """
-
     @staticmethod
     def forward(ctx, x, loss):
         ctx.save_for_backward(loss)
-        return x  # 正向传播不修改输出
+        return x  
 
     @staticmethod
     def backward(ctx, grad_output):
         loss, = ctx.saved_tensors
-        # 主任务梯度：grad_output 直接传递给前层
-        # 辅助损失梯度：loss 的梯度为 1（因为总损失是 main_loss + loss）
         grad_loss = torch.ones_like(loss) if loss.numel() == 1 else torch.ones_like(loss).mean()
-        return grad_output, grad_loss  # 返回主梯度和辅助梯度
+        return grad_output, grad_loss  
 
 
 class ConvEmbedding(nn.Module):
@@ -227,7 +202,6 @@ d_state = 32
 d_conv = 4
 expand = 2
 headdim = 32
-# 加深模型深度
 model = Mamba2(
     d_model=d_model,
     d_state=d_state,
@@ -241,7 +215,6 @@ model = Mamba2(
 class My_Model(nn.Module):
     def __init__(self, vocab_size=24, embedding_dim=512):
         super().__init__()
-        # 原始特征提取部分
         self.hidden_dim = config.hidden_dim
         self.output_dim = config.output_dim
 
@@ -251,21 +224,21 @@ class My_Model(nn.Module):
         self.transformer_encoder = nn.TransformerEncoder(self.encoder_layer, num_layers=1)
         self.mamba = model
         self.block1 = nn.Sequential(
-            nn.Linear(embedding_dim, 256),  # 输入维度对齐Transformer输出
-            nn.BatchNorm1d(128),
+            nn.Linear(embedding_dim, 256),  
+            nn.BatchNorm1d(256),
             nn.LeakyReLU(),
             nn.Dropout(0.5),
         )
         self.block3 = nn.Sequential(
-            nn.Linear(1152, 256),  # 输入维度调整为 embedding_dim
-            nn.BatchNorm1d(128),
+            nn.Linear(1152, 256), 
+            nn.BatchNorm1d(256),
             nn.PReLU(),
             nn.Dropout(0.5),
         )
         self.block2 = nn.Sequential(
-            nn.Linear(self.output_dim, 64),  # 输入维度对齐MoE输出
+            nn.Linear(self.output_dim, 64),  
             nn.ReLU(),
-            nn.Linear(64, 2)  # 直接输出
+            nn.Linear(64, 2)  
         )
 
         self.moe = DeepseekMoE(
@@ -273,10 +246,8 @@ class My_Model(nn.Module):
         )
 
     def forward(self, x):
-        """特征提取部分"""
         x = x.to(device)
         x = self.emb(x)
-
         output1 = self.mamba(x)
         output3 = torch.mean(output1, dim=1)
         output = self.block1(output3)
