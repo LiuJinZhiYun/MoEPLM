@@ -1,4 +1,4 @@
-# PSMOE: A computational method for predicting the solubility of protein and the effect of protein mutation on the solubility of protein 
+# MOEPLM: A computational method for predicting the solubility of protein and the effect of protein mutation on the solubility of protein 
 
 ## Complete Directory Structure  
 ```bash
