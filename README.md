@@ -108,3 +108,5 @@ Run training script (specify paths to sequence data and embeddings)
 ##  Test  
 Validate the trained model’s performance on a held-out dataset.  
 
+## Contact
+Please submit GitHub issues or contact Jinyun Zhang(jinyun_zhang@hainanu.edu.cn) for any questions related to the source code.
